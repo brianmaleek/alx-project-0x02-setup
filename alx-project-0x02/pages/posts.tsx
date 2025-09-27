@@ -2,9 +2,17 @@ import Head from "next/head";
 import Header from "@/components/layout/Header";
 import PostCard from "@/components/common/PostCard";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { type PostProps, type PostPageProps } from "@/interfaces";
+import { GetStaticProps } from "next";
 
-export default function Posts() {
-    const posts = [
+export default function Posts({ posts: serverPosts }: PostPageProps) {
+    const [apiPosts, setApiPosts] = useState<PostProps[]>(serverPosts || []);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Static posts (renamed to avoid conflict)
+    const staticPosts = [
         {
             id: "1",
             title: "Getting Started with Next.js",
@@ -35,6 +43,31 @@ export default function Posts() {
         }
     ];
 
+    // Fetch additional posts if server didn't provide any
+    useEffect(() => {
+        const fetchPosts = async () => {
+            if (serverPosts.length === 0) {
+                try {
+                    setLoading(true);
+                    const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=4');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch posts');
+                    }
+                    const data: PostProps[] = await response.json();
+                    setApiPosts(data);
+                } catch (err) {
+                    setError(err instanceof Error ? err.message : 'An unknown error occurred');
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+
+        fetchPosts();
+    }, [serverPosts]);
+
+    const totalPosts = staticPosts.length + apiPosts.length;
+
     return (
         <>
             <Head>
@@ -64,6 +97,13 @@ export default function Posts() {
                         Explore our collection of articles about web development, best practices, and modern technologies.
                     </p>
 
+                    {/* Error Message */}
+                    {error && (
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-8">
+                            <p className="text-red-600 dark:text-red-400">Error: {error}</p>
+                        </div>
+                    )}
+
                     {/* Posts Stats */}
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
                         <div className="flex items-center justify-between">
@@ -72,12 +112,12 @@ export default function Posts() {
                                     Latest Posts
                                 </h2>
                                 <p className="text-gray-600 dark:text-gray-300 mt-1">
-                                    {posts.length} articles available
+                                    {loading ? 'Loading...' : `${totalPosts} articles available`}
                                 </p>
                             </div>
                             <div className="bg-blue-100 dark:bg-blue-900/30 px-4 py-2 rounded-lg">
                                 <span className="text-blue-800 dark:text-blue-200 font-medium">
-                                    {posts.length} Posts
+                                    {loading ? 'Loading...' : totalPosts} Posts
                                 </span>
                             </div>
                         </div>
@@ -85,7 +125,8 @@ export default function Posts() {
 
                     {/* Posts Grid */}
                     <div className="grid md:grid-cols-2 gap-6">
-                        {posts.map((post, index) => (
+                        {/* Static Posts */}
+                        {staticPosts.map((post, index) => (
                             <PostCard
                                 key={post.id}
                                 title={post.title}
@@ -97,6 +138,32 @@ export default function Posts() {
                                 }`}
                             />
                         ))}
+
+                        {/* API Posts */}
+                        {loading ? (
+                            [...Array(4)].map((_, index) => (
+                                <div key={`loading-${index}`} className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
+                                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                                </div>
+                            ))
+                        ) : (
+                            apiPosts.map((post, index) => (
+                                <PostCard
+                                    key={`api-${post.id}`}
+                                    title={post.title}
+                                    content={post.content}  // ✅ Using 'content' from API
+                                    author={`User ${post.userId}`}
+                                    date={new Date().toLocaleDateString()}
+                                    userId={post.userId}
+                                    className={`hover:scale-105 transition-transform duration-200 ${
+                                        index % 2 === 0 ? 'border-l-4 border-green-500' : 'border-l-4 border-yellow-500'
+                                    }`}
+                                />
+                            ))
+                        )}
                     </div>
 
                     {/* Call to Action */}
@@ -122,3 +189,29 @@ export default function Posts() {
         </>
     );
 }
+
+// Add getStaticProps for server-side rendering
+export const getStaticProps: GetStaticProps = async () => {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts?_limit=4');
+        if (!response.ok) {
+            throw new Error('Failed to fetch posts');
+        }
+        const posts: PostProps[] = await response.json();
+
+        return {
+            props: {
+                posts,
+            },
+            revalidate: 60, // Revalidate every 60 seconds
+        };
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+        return {
+            props: {
+                posts: [],
+            },
+            revalidate: 60,
+        };
+    }
+};
