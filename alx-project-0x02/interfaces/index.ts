@@ -23,5 +23,19 @@ export interface PostCardProps {
     content: string;
     author?: string;
     date?: string;
+    userId?: number;
     className?: string;
+}
+
+export interface PostProps {
+    id: string;
+    title: string;
+    content: string;
+    author?: string;
+    date?: string;
+    userId?: number;
+}
+
+export interface PostPageProps {
+    posts: PostProps[];
 }
