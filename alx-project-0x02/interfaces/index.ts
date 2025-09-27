@@ -9,3 +9,11 @@ export interface PostModalProps {
     onClose: () => void;
     onAddPost: (title: string, content: string) => void;
 }
+
+export interface ButtonProps {
+    label: string;
+    size?: "small" | "medium" | "large";
+    shape?: "rounded-sm" | "rounded-md" | "rounded-full";
+    onClick?: () => void;
+    className?: string;
+}
