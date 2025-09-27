@@ -7,6 +7,7 @@ const PostCard: React.FC<PostCardProps> = ({
     content,
     author,
     date,
+    userId,
     className = ""
 }) => {
     return (
