@@ -164,7 +164,7 @@ export default function Users({ users: serverUsers }: UsersPageProps) {
 }
 
 // Add getStaticProps for server-side rendering
-export const getStaticProps: GetStaticProps = async () => {
+export async function getStaticProps() {
     try {
         const response = await fetch('https://jsonplaceholder.typicode.com/users');
         if (!response.ok) {
@@ -187,4 +187,4 @@ export const getStaticProps: GetStaticProps = async () => {
             revalidate: 3600,
         };
     }
-};
+}
