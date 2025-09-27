@@ -17,3 +17,11 @@ export interface ButtonProps {
     onClick?: () => void;
     className?: string;
 }
+
+export interface PostCardProps {
+    title: string;
+    content: string;
+    author?: string;
+    date?: string;
+    className?: string;
+}
