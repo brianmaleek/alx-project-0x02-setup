@@ -296,7 +296,7 @@ If the deadline passes, you won’t be able to generate your review link—so be
 
 - Define a `UserProps` interface in `interfaces/index.ts`.
 - Create a `UserCard.tsx` component in `components/common/UserCard.tsx` that displays user details like `name`, `email`, and `address`.
-- Fetch user data from this API and display it on the `/users` page using the `UserCard` component.
+- Fetch user data from this [API](https://jsonplaceholder.typicode.com/users) and display it on the `/users` page using the `UserCard` component.
 
 **Repo:**
 
